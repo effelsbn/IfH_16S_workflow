@@ -39,7 +39,4 @@ vignettes/*.pdf
 .Renviron
 
 .git
-
-.gitignore
-
 *.Rproj
