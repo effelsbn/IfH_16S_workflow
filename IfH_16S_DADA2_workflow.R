@@ -13,6 +13,8 @@ projectname <- args[2]
 output <- "/mnt/Netzlaufwerke/ukmsrv1488NGSequencing/16S/DADA2_pipeline_outputs"
 SILVA <- "/mnt/Netzlaufwerke/ukmsrv1488NGSequencing/16S/silva_nr99_v138.1_wSpecies_train_set.fa.gz" 
 
+.libPaths("/usr/lib/R/site-library/")
+
 # load libraries
 library(dada2)
 library(ggplot2)
