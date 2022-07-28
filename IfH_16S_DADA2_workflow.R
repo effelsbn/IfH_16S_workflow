@@ -13,7 +13,7 @@ projectname <- args[2]
 output <- "/mnt/Netzlaufwerke/ukmsrv1488NGSequencing/16S/DADA2_pipeline_outputs"
 SILVA <- "/mnt/Netzlaufwerke/ukmsrv1488NGSequencing/16S/silva_nr99_v138.1_wSpecies_train_set.fa.gz" 
 
-.libPaths("/usr/lib/R/site-library/")
+#.libPaths("/usr/lib/R/site-library/")
 
 # load libraries
 library(dada2)
@@ -42,17 +42,34 @@ fn <- list.files(path, full.names=TRUE)
 samples <- basename(fn)
 samples <- str_split_fixed(samples, "-", n=2)[,1]
 
-### Open a log-file and start time tracking
+# Check if any samples contain 0 Reads
+empties <- c()
+for (file in fn){
+  n_reads <- length(ShortRead::readFastq(file))
+  if (n_reads == 0){
+    empties <- append(empties, file)
+  }
+}
 
+empty_names <- str_split_fixed(basename(empties), "-", n=2)[,1]
+fn <- fn[! fn %in% empties]
+nz_samples <- samples[! samples %in% empty_names]
+
+### Open a log-file and start time tracking
 time.start <- Sys.time()
 log_open(file_name = file.path(QC, "Logfile.log"), logdir = FALSE, show_notes = FALSE) #open log-file to track time
 
 ##### Run DADA2-Pipeline #####
 
 # Remove primers and orient reads, discards reads that do not contain primers
-nop <- file.path("dada_tmp", "noprimers", basename(samples)) #creates a temporary subfolder in working directory
+nop <- file.path("dada_tmp", "noprimers", basename(nz_samples)) #creates a temporary subfolder in working directory
 prim <- removePrimers(fn, nop, primer.fwd=F27, primer.rev=dada2:::rc(R1492), orient=TRUE, verbose=TRUE)
-nop <- nop[file.exists(nop) == TRUE] #checks if every sample has reads and discards samples without reads
+noprimers <- nop[file.exists(nop) == FALSE] #checks if every sample has reads and discards samples without reads
+if (length(noprimers) > 0){
+  np_names <- str_split_fixed(basename(noprimers), "-", n=2)[,1]
+}
+nop <- nop[file.exists(nop) == TRUE] 
+
 t_prim <- Sys.time()
 
 # QC step: Create a histogram of length distribution of oriented reads, should peak around ~1450
@@ -132,10 +149,17 @@ put("Reverse primer:", blank_after = FALSE)
 put(R1492)
 put("Database for taxonomic classification:", blank_after = FALSE)
 put(basename(SILVA))
-put("Samples:", blank_after = FALSE)
-put(samples)
 put("Filtering parameters:", blank_after = FALSE)
 put("minQ=3, minLen=1000, maxLen=1600, maxN=0, rm.phix=FALSE, maxEE=2")
+put("Samples:", blank_after = FALSE)
+put(samples)
+put("The following samples were removed from the analysis because they contained 0 Reads:", blank_after = FALSE)
+if (exists("empty_names") || exists("np_names")){
+  put(empty_names)
+  put(np_names)
+} else {
+  put("none")
+}
 
 sep("Quality control")
 put(paste("The median read length after removing primers was:", median(lens)))
