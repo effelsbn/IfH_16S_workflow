@@ -13,7 +13,7 @@ projectname <- args[2]
 output <- "/mnt/Netzlaufwerke/ukmsrv1488NGSequencing/16S/DADA2_pipeline_outputs"
 SILVA <- "/mnt/Netzlaufwerke/ukmsrv1488NGSequencing/16S/silva_nr99_v138.1_wSpecies_train_set.fa.gz" 
 
-#.libPaths("/usr/lib/R/site-library/")
+#.libPaths(c("/usr/local/lib/R/site-library", "/usr/lib/R/site-library", "/usr/lib/R/library"))
 
 # load libraries
 library(dada2)
@@ -113,7 +113,7 @@ dimensions <- dim(st.nochim)
 prim1 <- prim[prim[,2] != 0,] #removes 0-Read samples
 read.track <- cbind(ccs=prim1[,1], primers=prim1[,2], filtered=reads.filt[,2], denoised=sapply(dd, function(x) sum(x$denoised)), nonchim=rowSums(st.nochim))
 read.track <- cbind(read.track, retained = round((read.track[,5]/read.track[,1]), digits = 2))
-rownames(read.track) <- samples
+rownames(read.track) <- nz_samples
 
 ### Save outputs
 save(st.nochim, file = file.path(Out, "DADA2_out_seqtab.RData"))
@@ -154,9 +154,9 @@ put("minQ=3, minLen=1000, maxLen=1600, maxN=0, rm.phix=FALSE, maxEE=2")
 put("Samples:", blank_after = FALSE)
 put(samples)
 put("The following samples were removed from the analysis because they contained 0 Reads:", blank_after = FALSE)
-if (exists("empty_names") || exists("np_names")){
+if (exists("empty_names") || exists("nz_names")){
   put(empty_names)
-  put(np_names)
+  put(nz_names)
 } else {
   put("none")
 }
