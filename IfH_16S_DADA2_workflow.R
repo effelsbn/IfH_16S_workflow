@@ -154,10 +154,13 @@ put("minQ=3, minLen=1000, maxLen=1600, maxN=0, rm.phix=FALSE, maxEE=2")
 put("Samples:", blank_after = FALSE)
 put(samples)
 put("The following samples were removed from the analysis because they contained 0 Reads:", blank_after = FALSE)
-if (exists("empty_names") || exists("nz_names")){
-  put(empty_names)
-  put(nz_names)
-} else {
+if(exists("empty_names")){
+    put(empty_names, blank_after = FALSE)
+  }
+if(exists("np_names")){
+    put(np_names)
+  }
+if(! exists("empty_names") && ! exists("np_names")){
   put("none")
 }
 
