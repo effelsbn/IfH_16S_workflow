@@ -43,7 +43,7 @@ samples <- basename(fn)
 samples <- str_split_fixed(samples, "-", n=2)[,1]
 
 # Check if any samples contain 0 Reads
-empties <- c()
+empties <- character()
 for (file in fn){
   n_reads <- length(ShortRead::readFastq(file))
   if (n_reads == 0){
