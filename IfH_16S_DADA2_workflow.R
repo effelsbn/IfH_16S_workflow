@@ -2,7 +2,7 @@
 ### Start script by running Rscript IfH_16S_DADA2_workflow.R [input path][Run ID]
 ### Input folder must contain CCS files in the following format: SampleID-16S-PB1.fastq.gz
 ### Output will contain ASV- & taxa-table as both .tsv and .Rdata files, a sequence list in .fna format & several QC files
- 
+
 ##### Setup environment #####
 
 args <- commandArgs(trailingOnly = TRUE)
@@ -84,6 +84,10 @@ filts <- file.path("dada_tmp", "noprimers", "filtered", basename(nop))
 reads.filt <- filterAndTrim(nop, filts, minQ=3, minLen=1000, maxLen=1600, maxN=0, rm.phix=FALSE, maxEE=2)
 t_filt <- Sys.time()
 
+# Check if any samples contain 0 Reads after filtering
+empty_names_filt <- nz_samples[! nz_samples %in% basename(filts)]
+nz_samples_filt <- nz_samples[! nz_samples %in% empty_names_filt]
+
 ### Run DADA2
 # Dereplicate
 drp <- derepFastq(filts, verbose=TRUE)
@@ -113,7 +117,7 @@ dimensions <- dim(st.nochim)
 prim1 <- prim[prim[,2] != 0,] #removes 0-Read samples
 read.track <- cbind(ccs=prim1[,1], primers=prim1[,2], filtered=reads.filt[,2], denoised=sapply(dd, function(x) sum(x$denoised)), nonchim=rowSums(st.nochim))
 read.track <- cbind(read.track, retained = round((read.track[,5]/read.track[,1]), digits = 2))
-rownames(read.track) <- nz_samples
+rownames(read.track) <- nz_samples_filt
 
 ### Save outputs
 save(st.nochim, file = file.path(Out, "DADA2_out_seqtab.RData"))
@@ -155,11 +159,11 @@ put("Samples:", blank_after = FALSE)
 put(samples)
 put("The following samples were removed from the analysis because they contained 0 Reads:", blank_after = FALSE)
 if(exists("empty_names")){
-    put(empty_names, blank_after = FALSE)
-  }
+  put(empty_names, blank_after = FALSE)
+}
 if(exists("np_names")){
-    put(np_names)
-  }
+  put(np_names)
+}
 if(! exists("empty_names") && ! exists("np_names")){
   put("none")
 }
